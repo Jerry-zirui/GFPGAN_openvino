@@ -10,6 +10,8 @@ from facexlib.detection.align_trans import get_reference_facial_points
 from facexlib.detection.retinaface_utils import (PriorBox, decode, decode_landm,
                                                  py_cpu_nms)
 from gfpgan.openvino.torch_ov_model import torch_model
+
+
 def generate_config(network_name):
 
     cfg_mnet = {
@@ -89,7 +91,7 @@ class RetinaFaceOpenVINO:
 
         inputs = inputs.numpy()
         print(f"infer {inputs.shape}")
-        results = self.compiled_model.infer_ov_model(inputs)
+        results = self.compiled_model.infer_ov_model(inputs,'GPU')
         #results = self.compiled_model([inputs])
         loc, conf, landmarks = results[0], results[1], results[2]
 

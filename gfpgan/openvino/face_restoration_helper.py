@@ -312,7 +312,7 @@ class FaceRestoreHelper(object):
                 face_input = torch.unsqueeze(face_input, 0).to(self.device)
                 print(f"parse input size {face_input.shape}")
                 with torch.no_grad():
-                    out = self.face_parse.infer_ov_model(face_input)[0]
+                    out = self.face_parse.infer_ov_model(face_input,'GPU')[0]
                     #out = self.face_parse(face_input)[0]
                 #out = out.argmax(dim=1).squeeze().cpu().numpy()
                 out = np.squeeze(np.argmax(out, axis=1))

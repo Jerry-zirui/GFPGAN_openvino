@@ -39,8 +39,8 @@ def init_detection_model(model_name, half=False, model_rootpath=None):
     model.load_state_dict(load_net, strict=True)
     model.eval()
 
-    example = (torch.randn(1, 3, 1156, 789),)
-    ov_model = torch_model(model, example)
+    example = (torch.randn(1, 3, 1164, 789),)
+    ov_model = torch_model(model, example,[1, 3, -1 , -1])
 
     if model:
         del model

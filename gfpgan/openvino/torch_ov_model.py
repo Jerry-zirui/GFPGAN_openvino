@@ -17,9 +17,9 @@ def flattenize_tuples(list_input):
     return unpacked_pt_res
 
 class torch_model():
-    def __init__(self, model:torch.nn.Module, example) -> None:
+    def __init__(self, model:torch.nn.Module, example, shape = None) -> None:
         self.example = example
-        self.ov_model = self.convert_model(model, example)
+        self.ov_model = self.convert_model(model, example, shape)
         pass
 
     def prepare_inputs(self, example):
@@ -29,10 +29,13 @@ class torch_model():
         else:
             return flattenize_structure(inputs)
 
-    def convert_model(self, model_obj, example):
+    def convert_model(self, model_obj, example, shape = None):
         print("Convert the model into ov::Model")
-        shape_list = example[0].shape
-        shape_list = list(shape_list)
+        if not shape:
+            shape_list = example[0].shape
+            shape_list = list(shape_list)
+        else:
+            shape_list = shape
         print(f"inputs shape: {shape_list}")
 
         return ov.convert_model(

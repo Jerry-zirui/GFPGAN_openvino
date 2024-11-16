@@ -130,7 +130,7 @@ class GFPGANer():
             cropped_face_t = cropped_face_t.unsqueeze(0).to(self.device)
 
             try:
-                output = torch.from_numpy(self.gfpgan_ov.infer_ov_model(cropped_face_t)[0])
+                output = torch.from_numpy(self.gfpgan_ov.infer_ov_model(cropped_face_t,'GPU')[0])
                 #output = self.gfpgan(cropped_face_t, return_rgb=False, weight=weight)[0]
                 # convert to image
                 restored_face = tensor2img(output.squeeze(0), rgb2bgr=True, min_max=(-1, 1))
