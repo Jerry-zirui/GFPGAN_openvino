@@ -3,12 +3,13 @@ import os
 import torch
 from basicsr.utils import img2tensor, tensor2img
 from basicsr.utils.download_util import load_file_from_url
-from facexlib.utils.face_restoration_helper import FaceRestoreHelper
+#from facexlib.utils.face_restoration_helper import FaceRestoreHelper
+from gfpgan.openvino.face_restoration_helper import FaceRestoreHelper
+from gfpgan.openvino.torch_ov_model import torch_model
 from torchvision.transforms.functional import normalize
 
-from gfpgan.archs.gfpgan_bilinear_arch import GFPGANBilinear
-from gfpgan.archs.gfpganv1_arch import GFPGANv1
 from gfpgan.archs.gfpganv1_clean_arch import GFPGANv1Clean
+
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -37,6 +38,7 @@ class GFPGANer():
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         # initialize the GFP-GAN
         if arch == 'clean':
+            print(f"arch: clean")
             self.gfpgan = GFPGANv1Clean(
                 out_size=512,
                 num_style_feat=512,
@@ -49,6 +51,7 @@ class GFPGANer():
                 narrow=1,
                 sft_half=True)
         elif arch == 'bilinear':
+            print(f"arch: bilinear")
             self.gfpgan = GFPGANBilinear(
                 out_size=512,
                 num_style_feat=512,
@@ -61,6 +64,7 @@ class GFPGANer():
                 narrow=1,
                 sft_half=True)
         elif arch == 'original':
+            print(f"arch: original")
             self.gfpgan = GFPGANv1(
                 out_size=512,
                 num_style_feat=512,
@@ -73,6 +77,7 @@ class GFPGANer():
                 narrow=1,
                 sft_half=True)
         elif arch == 'RestoreFormer':
+            print(f"arch: RestoreFormer")
             from gfpgan.archs.restoreformer_arch import RestoreFormer
             self.gfpgan = RestoreFormer()
         # initialize face helper
@@ -98,6 +103,9 @@ class GFPGANer():
         self.gfpgan.eval()
         self.gfpgan = self.gfpgan.to(self.device)
 
+        example = (torch.randn(1, 3, 512, 512),)
+        self.gfpgan_ov = torch_model(self.gfpgan, example)
+
     @torch.no_grad()
     def enhance(self, img, has_aligned=False, only_center_face=False, paste_back=True, weight=0.5):
         self.face_helper.clean_all()
@@ -122,7 +130,8 @@ class GFPGANer():
             cropped_face_t = cropped_face_t.unsqueeze(0).to(self.device)
 
             try:
-                output = self.gfpgan(cropped_face_t, return_rgb=False, weight=weight)[0]
+                output = torch.from_numpy(self.gfpgan_ov.infer_ov_model(cropped_face_t)[0])
+                #output = self.gfpgan(cropped_face_t, return_rgb=False, weight=weight)[0]
                 # convert to image
                 restored_face = tensor2img(output.squeeze(0), rgb2bgr=True, min_max=(-1, 1))
             except RuntimeError as error:
